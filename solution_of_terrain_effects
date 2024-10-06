@@ -1,58 +1,73 @@
-const terrainEffects = {
-    'Hill': {
-        'CavalryArcher': 2, 'FootArcher': 2, 'Militia': 0.5, 'Spearmen': 0.5, 'LightCavalry': 0.5, 'HeavyCavalry': 0.5
-    },
-    'Plains': {
-        'CavalryArcher': 2, 'LightCavalry': 2, 'HeavyCavalry': 2
-    },
-    'Muddy': {
-        'FootArcher': 2, 'Militia': 2, 'Spearmen': 2
-    },
-    'Default': {}
-};
-
- function applyTerrainEffect(unitClass, count, terrain) {
-    
-    const effect = terrainEffects && terrainEffects[terrain]?.[unitClass] || 1;
-    
-    return Math.floor(count * effect); 
+function sortUnits(units, terrains) {
+  const terrainEffects = getTerrainEffects();
+  const parsedUnits = parseUnits(units);
+  const unitPerformances = calculateUnitPerformances(parsedUnits, terrains, terrainEffects);
+  const sortedUnits = sortUnitsByPerformance(unitPerformances);
+  return formatSortedUnits(sortedUnits);
 }
 
- function adjustUnitsByTerrain(unitsStr, terrainsStr) {
-    let adjustedUnits = {}; 
- 
-    const units = unitsStr  && unitsStr.split(';');
-    const terrains = terrainsStr && terrainsStr?.split(';');
-    
-    
-    
-    
-   units && units.forEach((unit, index) => {
-        let [unitClass, count] =  unit && unit.split('#');
-        count = Number(count); 
-        let terrain = terrains && terrains[index];
-
-        console.log({unitClass, count , terrain})
-        adjustedUnits[unitClass] = applyTerrainEffect(unitClass, count, terrain);
-    });
-
-    const sortedUnits = Object.entries(adjustedUnits).sort();
-    
-    return sortedUnits.map(([unitClass, count]) => `${unitClass}#${count}`).join(';');
+function getTerrainEffects() {
+  return {
+    Hill: {
+      CavalryArcher: 2,
+      FootArcher: 2,
+      Militia: 0.5,
+      Spearmen: 0.5,
+      LightCavalry: 0.5,
+      HeavyCavalry: 0.5,
+    },
+    Plains: {
+      CavalryArcher: 2,
+      LightCavalry: 2,
+      HeavyCavalry: 2,
+      Militia: 1,
+      Spearmen: 1,
+      FootArcher: 1,
+    },
+    Muddy: {
+      FootArcher: 2,
+      Militia: 2,
+      Spearmen: 2,
+      CavalryArcher: 1,
+      LightCavalry: 1,
+      HeavyCavalry: 1,
+    },
+    Default: {
+      Militia: 1,
+      Spearmen: 1,
+      FootArcher: 1,
+      LightCavalry: 1,
+      HeavyCavalry: 1,
+      CavalryArcher: 1,
+    },
+  };
 }
 
+function parseUnits(units) {
+  return units.map((unit) => {
+    const [unitClass, count] = unit.split("#");
+    return { unitClass, count: Number(count) };
+  });
+}
 
-const unitsList = [
-    "Militia#10;FootArcher#5;HeavyCavalry#5;Spearmen#10;LightCavalry#100",
-    "Militia#10;Spearmen#10;FootArcher#100;LightCavalry#120;CavalryArcher#10"
-];
+function calculateUnitPerformances(parsedUnits, terrains, terrainEffects) {
+  return parsedUnits.map((unit) => {
+    const performance = terrains.reduce((acc, terrain) => {
+      const effect = terrainEffects[terrain] || terrainEffects.Default;
+      return acc + (effect[unit.unitClass] || 1) * unit.count;
+    }, 0);
+    return { ...unit, performance };
+  });
+}
 
-const terrainList = [
-    "Plains;Default;Default;Default;Default"
-];
+function sortUnitsByPerformance(unitPerformances) {
+  return unitPerformances.sort((a, b) => b.performance - a.performance);
+}
 
-unitsList && unitsList.forEach((unitsStr, index) => {
-    const terrainsStr = terrainList && terrainList[index];
-    const answer = adjustUnitsByTerrain(unitsStr, terrainsStr);
-    console.log("Output ",answer);
-});
+function formatSortedUnits(sortedUnits) {
+  return sortedUnits.map((unit) => `${unit.unitClass}#${unit.count}`);
+}
+
+const units = ["Militia#10", "FootArcher#5", "HeavyCavalry#5", "Spearmen#10", "LightCavalry#100"];
+const terrains = ["Plains", "Default", "Default", "Default", "Default"];
+console.log(sortUnits(units, terrains));
