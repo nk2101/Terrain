@@ -1,0 +1,58 @@
+const terrainEffects = {
+    'Hill': {
+        'CavalryArcher': 2, 'FootArcher': 2, 'Militia': 0.5, 'Spearmen': 0.5, 'LightCavalry': 0.5, 'HeavyCavalry': 0.5
+    },
+    'Plains': {
+        'CavalryArcher': 2, 'LightCavalry': 2, 'HeavyCavalry': 2
+    },
+    'Muddy': {
+        'FootArcher': 2, 'Militia': 2, 'Spearmen': 2
+    },
+    'Default': {}
+};
+
+ function applyTerrainEffect(unitClass, count, terrain) {
+    
+    const effect = terrainEffects && terrainEffects[terrain]?.[unitClass] || 1;
+    
+    return Math.floor(count * effect); 
+}
+
+ function adjustUnitsByTerrain(unitsStr, terrainsStr) {
+    let adjustedUnits = {}; 
+ 
+    const units = unitsStr  && unitsStr.split(';');
+    const terrains = terrainsStr && terrainsStr?.split(';');
+    
+    
+    
+    
+   units && units.forEach((unit, index) => {
+        let [unitClass, count] =  unit && unit.split('#');
+        count = Number(count); 
+        let terrain = terrains && terrains[index];
+
+        console.log({unitClass, count , terrain})
+        adjustedUnits[unitClass] = applyTerrainEffect(unitClass, count, terrain);
+    });
+
+    const sortedUnits = Object.entries(adjustedUnits).sort();
+    
+    return sortedUnits.map(([unitClass, count]) => `${unitClass}#${count}`).join(';');
+}
+
+
+const unitsList = [
+    "Militia#10;FootArcher#5;HeavyCavalry#5;Spearmen#10;LightCavalry#100",
+    "Militia#10;Spearmen#10;FootArcher#100;LightCavalry#120;CavalryArcher#10"
+];
+
+const terrainList = [
+    "Plains;Default;Default;Default;Default"
+];
+
+unitsList && unitsList.forEach((unitsStr, index) => {
+    const terrainsStr = terrainList && terrainList[index];
+    const answer = adjustUnitsByTerrain(unitsStr, terrainsStr);
+    console.log("Output ",answer);
+});
